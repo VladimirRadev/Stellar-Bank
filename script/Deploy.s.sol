@@ -8,6 +8,8 @@ import {IStellarPool} from "../src/interfaces/IStellarPool.sol";
 
 /// @notice Deploys StellarBank (10% savings APR, 20% borrow APR) and grants it MINTER_ROLE on VLAD (2 transactions).
 /// @dev Env: PRIVATE_KEY (must hold DEFAULT_ADMIN_ROLE on VLAD), VLAD_TOKEN, STELLAR_POOL. Never hard-code keys.
+/// @dev Run with `--broadcast --slow --skip-simulation` (README "Deploy"): Sepolia prices contract creation far above
+///      the local Cancun simulation, and the EIP-7702-delegated deployer accepts one in-flight tx at a time.
 contract Deploy is Script {
     uint256 internal constant SAVINGS_BPS = 1000;
     uint256 internal constant BORROW_BPS = 2000;

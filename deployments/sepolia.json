@@ -1,0 +1,50 @@
+{
+  "chainId": 11155111,
+  "status": "pending: StellarBank is not deployed yet; fill the null fields after the broadcast",
+  "deployer": "0xEb0243ea72CB24eFb7128Ee7aca314C080b600c4",
+  "contracts": {
+    "StellarBank": {
+      "address": null,
+      "txHash": null,
+      "block": null,
+      "gasUsed": null,
+      "constructorArgs": {
+        "vlad": "0x49ba857d553ef219B144b200F41acaf8CB6768E9",
+        "pool": null,
+        "savingsBps": 1000,
+        "borrowBps": 2000
+      }
+    }
+  },
+  "roles": {
+    "grantMinterRoleToBank": {
+      "txHash": null,
+      "block": null,
+      "gasUsed": null,
+      "role": "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6"
+    }
+  },
+  "external": {
+    "VladToken": {
+      "address": "0x49ba857d553ef219B144b200F41acaf8CB6768E9",
+      "source": "Stellar-Faucet deployments/sepolia.json"
+    },
+    "StellarPool": {
+      "address": null,
+      "source": "Stellar-LP-Staking deployments/sepolia.json",
+      "seed": "0.02 ETH + 2,000 VLAD (1 ETH = 100,000 VLAD)"
+    }
+  },
+  "verified": {
+    "StellarBank": {
+      "sourcify": null,
+      "blockscout": null
+    }
+  },
+  "cost": {
+    "effectiveGasPriceWei": null,
+    "totalGasUsed": null,
+    "totalWei": null
+  },
+  "notes": "Two transactions from the deployer, sent with forge script --broadcast --slow --skip-simulation: (1) create StellarBank(vlad, pool, 1000, 2000); (2) VladToken.grantRole(MINTER_ROLE, bank). If the node rejects a send with 'in-flight transaction limit reached for delegated accounts', wait about 20 s and rerun the same command with --resume."
+}

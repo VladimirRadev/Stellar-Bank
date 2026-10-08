@@ -4,12 +4,12 @@ import type { Address } from 'viem'
 export const CHAIN_ID = 11155111 as const
 
 /**
- * Deployed contract addresses on Sepolia.
+ * Deployed contract addresses on Sepolia (see deployments/sepolia.json).
  * `vladToken` comes from Stellar-Faucet, `pool` (StellarPool) from Stellar-LP-Staking, `bank` from this repo.
  * The zero address is a placeholder: the UI shows a "not deployed yet" state for it.
  */
 export const addresses = {
-  vladToken: '0x0000000000000000000000000000000000000000',
+  vladToken: '0x49ba857d553ef219B144b200F41acaf8CB6768E9',
   bank: '0x0000000000000000000000000000000000000000',
   pool: '0x0000000000000000000000000000000000000000',
 } as const satisfies Record<string, Address>

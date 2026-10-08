@@ -137,13 +137,16 @@ npm run dev                      # http://localhost:5173/Stellar-Bank/
 
 `.github/workflows/pages.yml` builds `web/` and publishes it to GitHub Pages on every push to `main`.
 
-## Deployed addresses (Sepolia)
+## Deployed addresses (Sepolia, chain id 11155111)
 
-| Contract | Address |
-| --- | --- |
-| StellarBank | TODO |
-| VladToken (Stellar-Faucet) | TODO |
-| StellarPool (Stellar-LP-Staking) | TODO |
+| Contract | Address | Deploy tx |
+|---|---|---|
+| StellarBank | pending (deploys after StellarPool) | pending |
+| VladToken ($VLAD, from Stellar-Faucet) | [`0x49ba857d553ef219B144b200F41acaf8CB6768E9`](https://eth-sepolia.blockscout.com/address/0x49ba857d553ef219B144b200F41acaf8CB6768E9) | [`0x3b24505f…f9f5d3`](https://eth-sepolia.blockscout.com/tx/0x3b24505f6310f9ee43a43465e923814519b6e66197674b612910591aa0f9f5d3) |
+| StellarPool (price source, from Stellar-LP-Staking) | pending | pending |
+
+`MINTER_ROLE` on VLAD for the bank: pending (transaction 2 of the deploy script). Full details (blocks, gas,
+verification) go into [`deployments/sepolia.json`](deployments/sepolia.json).
 
 ## Develop
 
@@ -153,15 +156,33 @@ forge test -vvv
 forge fmt --check
 ```
 
-Deploy (2 transactions: create the bank, grant it `MINTER_ROLE`). The deployer key must hold `DEFAULT_ADMIN_ROLE`
-on VLAD. Keep secrets in an untracked `.env` file; `.env*` is git-ignored.
+## Deploy
+
+The deploy script sends exactly two transactions from the deployer:
+
+1. create `StellarBank(VLAD_TOKEN, STELLAR_POOL, 1000, 2000)` (10% savings APR, 20% borrow APR);
+2. `VladToken.grantRole(MINTER_ROLE, bank)`, so the bank can mint savings interest.
+
+The deployer key must hold `DEFAULT_ADMIN_ROLE` on VLAD. It is read from the `PRIVATE_KEY` environment variable
+and lives in an env file outside the repo (`.env*` is git-ignored anyway). The script refuses to run when
+`VLAD_TOKEN` or `STELLAR_POOL` has no contract code.
 
 ```shell
-export PRIVATE_KEY=0x...      # VLAD admin key
-export VLAD_TOKEN=0x...       # VladToken from Stellar-Faucet
-export STELLAR_POOL=0x...     # StellarPool from Stellar-LP-Staking
-forge script script/Deploy.s.sol --rpc-url "$SEPOLIA_RPC_URL" --broadcast
+set -a; source /path/to/deployer.env; set +a
+VLAD_TOKEN=0x49ba857d553ef219B144b200F41acaf8CB6768E9 STELLAR_POOL=<pool> \
+forge script script/Deploy.s.sol \
+  --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+  --broadcast --slow --skip-simulation \
+  --priority-gas-price 10000000 --with-gas-price 1000000000 -vvv
 ```
+
+- `--skip-simulation`: Sepolia's current fork prices contract creation about 6.5 times above forge's local
+  Cancun simulation. Without the flag, forge sets each gas limit to the local estimate × 1.3 and the creation runs
+  out of gas. With it, forge asks the Sepolia node for a gas estimate right before each send.
+- `--slow`: the deployer account carries an EIP-7702 delegation, so the node accepts only one unconfirmed
+  transaction at a time. `--slow` waits for each receipt before sending the next transaction.
+- If a send is still rejected with "in-flight transaction limit reached for delegated accounts", wait about 20
+  seconds and rerun the same command with `--resume`; it sends only the transactions that are still missing.
 
 ## Part of the Stellar suite
 

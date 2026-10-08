@@ -42,8 +42,8 @@ export function BankApp() {
     <div className="space-y-12 sm:space-y-16">
       {!DEPLOYED ? (
         <div className="rounded-2xl border border-warning/30 bg-warning/[0.06] px-4 py-3 text-sm text-warning">
-          Contracts are not deployed yet. The addresses in <code className="font-mono">config/addresses.ts</code> are
-          placeholders, so on-chain reads are switched off.
+          StellarBank is not deployed yet. Its address in <code className="font-mono">config/addresses.ts</code> is a
+          placeholder, so bank reads are switched off.
         </div>
       ) : null}
 

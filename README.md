@@ -104,6 +104,39 @@ Worked example (the same numbers as `test_LiquidateSeizesWithBonusAndLeavesRemai
   collateral; there is no bad-debt socialisation.
 - Savings interest requires the bank to keep `MINTER_ROLE` on VLAD; the VLAD admin can revoke it.
 
+## Web app
+
+**Live: https://vladimirradev.github.io/Stellar-Bank/**
+
+The frontend in `web/` is React 19 + Vite 8 + wagmi 3 + viem 2 + Tailwind CSS 4, built from the shared Stellar
+scaffold (`web/SCAFFOLD.md`). `web/src/shell/` (navigation, wallet button, transaction button, formatting) is
+identical in all five Stellar apps; the bank page itself is in `web/src/app/`. MetaMask (injected wallet) only,
+public Sepolia RPCs, no backend.
+
+- **Header stats:** ETH price in VLAD (AMM spot with the same-block guard), free VLAD liquidity, savings APR,
+  borrow APR and the number of borrowers.
+- **Save:** your savings balance ticks up every 100 ms in the browser with the contract's simple-interest formula.
+  Deposit is Approve then Deposit; Withdraw has a MAX that sends `type(uint256).max` (everything, including interest).
+- **Borrow (credit line):** collateral and its VLAD value, live debt, max borrow, credit-used bar, a colour-coded
+  health-factor gauge (green from 1.5, amber from 1 to 1.5, red below 1, ∞ without debt), the liquidation price, and
+  Add ETH / Withdraw / Borrow / Repay with a preview of the health factor after the action.
+- **Liquidate:** the first 50 borrowers with collateral, debt and health factor (one multicall), sortable by health
+  factor. Positions below 1 can be liquidated in place, with the VLAD you pay and the ETH you receive shown first.
+- Custom errors (for example `SameBlockPriceUpdate`, `ExceedsLtv`) are decoded into readable sentences before the
+  wallet opens.
+- While `web/src/config/addresses.ts` holds zero addresses, on-chain reads are switched off and the page shows a
+  "not deployed yet" banner.
+
+```shell
+forge build                      # the web app reads ABIs from out/
+cd web
+npm install
+npm run sync-abi                 # out/ -> src/abi/*.ts
+npm run dev                      # http://localhost:5173/Stellar-Bank/
+```
+
+`.github/workflows/pages.yml` builds `web/` and publishes it to GitHub Pages on every push to `main`.
+
 ## Deployed addresses (Sepolia)
 
 | Contract | Address |

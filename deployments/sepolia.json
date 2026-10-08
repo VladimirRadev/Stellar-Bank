@@ -1,16 +1,15 @@
 {
   "chainId": 11155111,
-  "status": "pending: StellarBank is not deployed yet; fill the null fields after the broadcast",
   "deployer": "0xEb0243ea72CB24eFb7128Ee7aca314C080b600c4",
   "contracts": {
     "StellarBank": {
-      "address": null,
-      "txHash": null,
-      "block": null,
-      "gasUsed": null,
+      "address": "0x4Dd37833521B458E72139eF77a17Ff9A50FC1588",
+      "txHash": "0xf3b6492f2b33113ebfdd26b1c3d9438fb6631fb0f22334f404a1358b7907e25f",
+      "block": 11870492,
+      "gasUsed": 10228881,
       "constructorArgs": {
         "vlad": "0x49ba857d553ef219B144b200F41acaf8CB6768E9",
-        "pool": null,
+        "pool": "0xAC08AA11850cf015160A93DAD746CA480407b7Ae",
         "savingsBps": 1000,
         "borrowBps": 2000
       }
@@ -18,9 +17,9 @@
   },
   "roles": {
     "grantMinterRoleToBank": {
-      "txHash": null,
-      "block": null,
-      "gasUsed": null,
+      "txHash": "0x0b68dd31b40af632bb4ad9cb9b8005a50138b8dad45140b0aab19a0a871b7528",
+      "block": 11870496,
+      "gasUsed": 133532,
       "role": "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6"
     }
   },
@@ -30,21 +29,30 @@
       "source": "Stellar-Faucet deployments/sepolia.json"
     },
     "StellarPool": {
-      "address": null,
+      "address": "0xAC08AA11850cf015160A93DAD746CA480407b7Ae",
       "source": "Stellar-LP-Staking deployments/sepolia.json",
       "seed": "0.02 ETH + 2,000 VLAD (1 ETH = 100,000 VLAD)"
     }
   },
   "verified": {
     "StellarBank": {
-      "sourcify": null,
-      "blockscout": null
+      "sourcify": "exact_match",
+      "blockscout": "Pass - Verified via eth_bytecode_db (is_fully_verified = true)"
     }
   },
   "cost": {
-    "effectiveGasPriceWei": null,
-    "totalGasUsed": null,
-    "totalWei": null
+    "effectiveGasPriceWei": 10000013,
+    "totalGasUsed": 10362413,
+    "totalWei": "103624264711369"
   },
-  "notes": "Two transactions from the deployer, sent with forge script --broadcast --slow --skip-simulation: (1) create StellarBank(vlad, pool, 1000, 2000); (2) VladToken.grantRole(MINTER_ROLE, bank). If the node rejects a send with 'in-flight transaction limit reached for delegated accounts', wait about 20 s and rerun the same command with --resume."
+  "postDeployChecks": {
+    "ethPrice": "100000000000000000000000",
+    "savingsRateBps": 1000,
+    "borrowRateBps": 2000,
+    "availableLiquidity": "0",
+    "borrowersCount": 0,
+    "bankHasMinterRole": true,
+    "owner": "0xEb0243ea72CB24eFb7128Ee7aca314C080b600c4"
+  },
+  "notes": "Two transactions (deployer nonce 17 -> 19), sent with forge script --broadcast --slow --skip-simulation so the Sepolia node estimated gas. Transaction 2 (grantRole) was first rejected with 'in-flight transaction limit reached for delegated accounts' because the deployer is an EIP-7702 delegated account; after a 20 s wait the same command with --resume sent it. Blockscout imported the verification from its bytecode database; no separate Blockscout submission was needed."
 }

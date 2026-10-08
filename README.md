@@ -141,12 +141,14 @@ npm run dev                      # http://localhost:5173/Stellar-Bank/
 
 | Contract | Address | Deploy tx |
 |---|---|---|
-| StellarBank | pending (deploys after StellarPool) | pending |
+| StellarBank | [`0x4Dd37833521B458E72139eF77a17Ff9A50FC1588`](https://eth-sepolia.blockscout.com/address/0x4Dd37833521B458E72139eF77a17Ff9A50FC1588) | [`0xf3b6492f…07e25f`](https://eth-sepolia.blockscout.com/tx/0xf3b6492f2b33113ebfdd26b1c3d9438fb6631fb0f22334f404a1358b7907e25f) |
 | VladToken ($VLAD, from Stellar-Faucet) | [`0x49ba857d553ef219B144b200F41acaf8CB6768E9`](https://eth-sepolia.blockscout.com/address/0x49ba857d553ef219B144b200F41acaf8CB6768E9) | [`0x3b24505f…f9f5d3`](https://eth-sepolia.blockscout.com/tx/0x3b24505f6310f9ee43a43465e923814519b6e66197674b612910591aa0f9f5d3) |
-| StellarPool (price source, from Stellar-LP-Staking) | pending | pending |
+| StellarPool (price source, from Stellar-LP-Staking) | [`0xAC08AA11850cf015160A93DAD746CA480407b7Ae`](https://eth-sepolia.blockscout.com/address/0xAC08AA11850cf015160A93DAD746CA480407b7Ae) | see Stellar-LP-Staking |
 
-`MINTER_ROLE` on VLAD for the bank: pending (transaction 2 of the deploy script). Full details (blocks, gas,
-verification) go into [`deployments/sepolia.json`](deployments/sepolia.json).
+`MINTER_ROLE` on VLAD was granted to the bank in tx
+[`0x0b68dd31…1b7528`](https://eth-sepolia.blockscout.com/tx/0x0b68dd31b40af632bb4ad9cb9b8005a50138b8dad45140b0aab19a0a871b7528).
+StellarBank is verified on Sourcify (exact match) and Blockscout. Full details (blocks, gas, verification,
+post-deploy checks) are in [`deployments/sepolia.json`](deployments/sepolia.json).
 
 ## Develop
 

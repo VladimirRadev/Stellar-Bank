@@ -5,6 +5,8 @@
 out/
 cache/
 broadcast/**/dry-run
+# Keep only run-latest.json of each broadcast; timestamped copies are noise.
+broadcast/**/run-[0-9]*.json
 
 # Node / web
 node_modules/

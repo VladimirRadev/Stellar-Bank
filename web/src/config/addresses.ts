@@ -10,8 +10,8 @@ export const CHAIN_ID = 11155111 as const
  */
 export const addresses = {
   vladToken: '0x49ba857d553ef219B144b200F41acaf8CB6768E9',
-  bank: '0x0000000000000000000000000000000000000000',
-  pool: '0x0000000000000000000000000000000000000000',
+  bank: '0x4Dd37833521B458E72139eF77a17Ff9A50FC1588',
+  pool: '0xAC08AA11850cf015160A93DAD746CA480407b7Ae',
 } as const satisfies Record<string, Address>
 
 /** Contracts listed in the footer, with Blockscout links. */

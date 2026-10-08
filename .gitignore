@@ -1,0 +1,14 @@
+# Secrets: never commit any env file
+.env*
+
+# Foundry
+out/
+cache/
+broadcast/**/dry-run
+
+# Node / web
+node_modules/
+web/dist/
+
+# OS
+.DS_Store

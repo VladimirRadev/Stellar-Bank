@@ -186,6 +186,25 @@ forge script script/Deploy.s.sol \
 - If a send is still rejected with "in-flight transaction limit reached for delegated accounts", wait about 20
   seconds and rerun the same command with `--resume`; it sends only the transactions that are still missing.
 
+## Smoke tests (2026-10-09)
+
+End-to-end run on Ethereum Sepolia on 2026-10-09 from the deployer `0xEb0243ea72CB24eFb7128Ee7aca314C080b600c4` (an EIP-7702 delegated EOA), with `smoke.sh` (19 steps across the whole suite, one transaction at a time, each waiting for its receipt). After every transaction the script compared balances, reserves and events at the transaction's block with the block before it; "ok" means every such assertion passed. Step numbers are the suite-wide order. Rows for this repo (step 7 is the VLAD approval for the bank):
+
+| Step | Function | Result | Tx (Blockscout) | Gas used |
+|---|---|---|---|---|
+| 7 | `vlad.approve(bank, max)` | ok | [`0x5276df90…565ee2`](https://eth-sepolia.blockscout.com/tx/0x5276df90ad2466ba152274337d98342dd99b796561603ef64528843843565ee2) | 128628 |
+| 8 | `bank.depositSavings(500e18)` | ok | [`0xdaa30c59…084102`](https://eth-sepolia.blockscout.com/tx/0xdaa30c595c012b0aa7ba5021e7da498d1ec5e4f73bb4c58d73172f3e3a084102) | 373716 |
+| 9 | `bank.depositCollateral() 0.0005 ETH` | ok | [`0xcc7e8281…d8b027`](https://eth-sepolia.blockscout.com/tx/0xcc7e82810051b86c460b9bfb28b4d41492e4d9b65e15a5e1665b9f0bf3d8b027) | 466087 |
+| 10 | `bank.borrow(20e18)` | ok | [`0x066bf6b6…23062b`](https://eth-sepolia.blockscout.com/tx/0x066bf6b6c411ee7d413220fd6dea650becc785dfb2f2c9f4a713655c4123062b) | 288072 |
+| 11 | `bank.repay(max)` | ok | [`0xb6ee38e7…282b8c`](https://eth-sepolia.blockscout.com/tx/0xb6ee38e7bd9aa2bbe061060885b1e5a7d73a7f17ddbdd36ecdc2bca736282b8c) | 72696 |
+| 12 | `bank.withdrawCollateral(full)` | ok | [`0x71425f3c…603e3a`](https://eth-sepolia.blockscout.com/tx/0x71425f3c03e2a4654ef66d93d8117159aaffc9e9e7fb94f8bc6f229432603e3a) | 57316 |
+| 13 | `bank.withdrawSavings(max)` | ok | [`0xec3a1b72…44502e`](https://eth-sepolia.blockscout.com/tx/0xec3a1b7273c602049eca2ec15ea80027ade37490976df1097e8105260244502e) | 87050 |
+
+- Step 10 borrow: 20 VLAD against 0.0005 ETH at 99008.928055830738494975 VLAD/ETH; maxBorrow 24.752232013957684623; health factor 1.856417401046826346
+- Step 11 repay: repaid 20.000003044140030441 VLAD (borrow interest 0.000003044140030441 VLAD over 24 s)
+- Step 12 collateral: withdrew 0.0005 ETH collateral
+- Step 13 savings: withdrew 500.000228310502283105 VLAD; InterestAccrued = 0.000228310502283105 VLAD (228310502283105 wei) over 144 s at 1000 bps
+
 ## Part of the Stellar suite
 
 | Repo | Site |

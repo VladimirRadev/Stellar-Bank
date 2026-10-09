@@ -1,8 +1,8 @@
 /**
- * The five apps of the Stellar suite. This file is identical in all five repos,
+ * The six apps of the Stellar suite. This file is identical in all five Stellar-* repos,
  * except for CURRENT_SITE at the bottom, which names the app this repo builds.
  */
-export type SiteKey = 'faucet' | 'lp-staking' | 'bank' | 'store' | 'arena'
+export type SiteKey = 'faucet' | 'lp-staking' | 'bank' | 'store' | 'arena' | 'stellargon'
 
 export type Site = {
   key: SiteKey
@@ -61,6 +61,14 @@ export const SITES: readonly Site[] = [
     tagline: 'Put $VLAD to play in on-chain games',
     url: `${PAGES_ROOT}/Stellar-Arena/`,
     repo: `${GITHUB_PROFILE}/Stellar-Arena`,
+  },
+  {
+    key: 'stellargon',
+    name: 'Stellargon',
+    navLabel: 'Stellargon',
+    tagline: 'Predict real-world events',
+    url: `${PAGES_ROOT}/Stellargon/`,
+    repo: `${GITHUB_PROFILE}/Stellargon`,
   },
 ]
 

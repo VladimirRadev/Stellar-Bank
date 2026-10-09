@@ -25,7 +25,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          {/* One row of the five apps at every width. It scrolls inside itself, never the page. */}
+          {/* One row of all suite apps at every width. It scrolls inside itself, never the page. */}
           <nav
             aria-label="Stellar apps"
             className="-mb-px flex min-w-0 gap-0.5 overflow-x-auto [scrollbar-width:none] md:gap-1 [&::-webkit-scrollbar]:hidden"

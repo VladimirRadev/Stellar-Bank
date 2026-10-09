@@ -110,7 +110,7 @@ Worked example (the same numbers as `test_LiquidateSeizesWithBonusAndLeavesRemai
 
 The frontend in `web/` is React 19 + Vite 8 + wagmi 3 + viem 2 + Tailwind CSS 4, built from the shared Stellar
 scaffold (`web/SCAFFOLD.md`). `web/src/shell/` (navigation, wallet button, transaction button, formatting) is
-identical in all five Stellar apps; the bank page itself is in `web/src/app/`. MetaMask (injected wallet) only,
+identical in all six Stellar apps; the bank page itself is in `web/src/app/`. MetaMask (injected wallet) only,
 public Sepolia RPCs, no backend.
 
 - **Header stats:** ETH price in VLAD (AMM spot with the same-block guard), free VLAD liquidity, savings APR,
@@ -207,13 +207,16 @@ End-to-end run on Ethereum Sepolia on 2026-10-09 from the deployer `0xEb0243ea72
 
 ## Part of the Stellar suite
 
-| Repo | Site |
-| --- | --- |
-| [Stellar-Faucet](https://github.com/VladimirRadev/Stellar-Faucet) | https://vladimirradev.github.io/Stellar-Faucet/ |
-| [Stellar-LP-Staking](https://github.com/VladimirRadev/Stellar-LP-Staking) | https://vladimirradev.github.io/Stellar-LP-Staking/ |
-| [Stellar-Bank](https://github.com/VladimirRadev/Stellar-Bank) | https://vladimirradev.github.io/Stellar-Bank/ |
-| [Stellar-Store](https://github.com/VladimirRadev/Stellar-Store) | https://vladimirradev.github.io/Stellar-Store/ |
-| [Stellar-Arena](https://github.com/VladimirRadev/Stellar-Arena) | https://vladimirradev.github.io/Stellar-Arena/ |
+| App | Repository | Live site |
+|---|---|---|
+| Faucet ($VLAD token) | [Stellar-Faucet](https://github.com/VladimirRadev/Stellar-Faucet) | https://vladimirradev.github.io/Stellar-Faucet/ |
+| Swap & LP Staking | [Stellar-LP-Staking](https://github.com/VladimirRadev/Stellar-LP-Staking) | https://vladimirradev.github.io/Stellar-LP-Staking/ |
+| Bank | **[Stellar-Bank](https://github.com/VladimirRadev/Stellar-Bank)** (this repo) | https://vladimirradev.github.io/Stellar-Bank/ |
+| Store | [Stellar-Store](https://github.com/VladimirRadev/Stellar-Store) | https://vladimirradev.github.io/Stellar-Store/ |
+| Arena + Arcade | [Stellar-Arena](https://github.com/VladimirRadev/Stellar-Arena) | https://vladimirradev.github.io/Stellar-Arena/ |
+| Stellargon (prediction market) | [Stellargon](https://github.com/VladimirRadev/Stellargon) | https://vladimirradev.github.io/Stellargon/ |
+
+Stellar is a personal portfolio brand, unrelated to the Stellar (XLM) network.
 
 ## License
 

@@ -1,5 +1,5 @@
 /**
- * The six apps of the Stellar suite. This file is identical in all five Stellar-* repos,
+ * The six apps of the Stellar suite. This file is identical in all six Stellar repos,
  * except for CURRENT_SITE at the bottom, which names the app this repo builds.
  */
 export type SiteKey = 'faucet' | 'lp-staking' | 'bank' | 'store' | 'arena' | 'stellargon'

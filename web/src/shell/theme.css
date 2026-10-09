@@ -1,5 +1,5 @@
 /*
- * Stellar design tokens + base styles. Shared by all five Stellar apps: do not fork per app.
+ * Stellar design tokens + base styles. Shared by all six Stellar apps: do not fork per app.
  * Fonts (Space Grotesk, Inter, JetBrains Mono) are loaded from Google Fonts in index.html.
  * Every token below becomes a CSS variable (for example --color-accent) and a Tailwind
  * utility (bg-accent, text-muted, border-border, font-display, font-mono, ...).

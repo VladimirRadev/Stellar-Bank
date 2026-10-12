@@ -4,11 +4,13 @@ import { CHAIN_ID, footerContracts } from '../config/addresses'
 import { explorerAddressUrl, formatToken, isConfiguredAddress, truncateAddress } from './format'
 import { ArrowIcon, ExternalIcon, GithubIcon, StarGlyph } from './icons'
 import { CURRENT_SITE, GITHUB_PROFILE, SITES, type SiteKey, currentSite, getSite } from './sites'
+import { ToastHost } from './Toast'
 import { useVladBalance } from './useVladBalance'
 import { WalletButton } from './WalletButton'
 
 /**
- * Page frame shared by all Stellar apps: top navigation, faucet hint, main content, footer.
+ * Page frame shared by all Stellar apps: top navigation, faucet hint, main content, footer, and
+ * the toast stack (ToastHost, mounted once here; app code only calls toast()).
  * `site` is the SITES entry this page is: the nav marks it active, and the faucet hint and the
  * footer's source link follow it. It defaults to CURRENT_SITE. Only the Faucet's second page,
  * the CV at /Stellar-Faucet/cv/, passes another key (`site="cv"`).
@@ -41,6 +43,8 @@ export function Shell({ children, site = CURRENT_SITE }: { children: ReactNode; 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">{children}</main>
 
       <Footer site={site} />
+
+      <ToastHost />
     </div>
   )
 }

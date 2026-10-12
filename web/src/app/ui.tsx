@@ -1,10 +1,6 @@
 // Small presentational pieces shared by the bank tabs.
 import type { ReactNode } from 'react'
-import { iVladTokenAbi } from '../abi'
-import { addresses } from '../config/addresses'
-import { formatToken } from '../shell/format'
-import { TxButton } from '../shell/TxButton'
-import { BANK_ERRORS, TONE_COLOR, TONE_TEXT, accrue, formatFixed, formatHf, hfTone, useNowMs, type Tone } from './bank'
+import { TONE_COLOR, TONE_TEXT, accrue, formatFixed, formatHf, hfTone, useNowMs, type Tone } from './bank'
 
 /** A balance that keeps growing client-side with the contract's simple-interest formula. */
 export function LiveAmount({
@@ -209,34 +205,4 @@ export function HealthGauge({ hf, known }: { hf: bigint | undefined; known: bool
       </figcaption>
     </figure>
   )
-}
-
-/** Shows "Approve VLAD" while the allowance is below `need`, then the real action. */
-export function ApproveThen({
-  need,
-  allowance,
-  disabled,
-  children,
-}: {
-  need: bigint | undefined
-  allowance: bigint | undefined
-  disabled?: boolean
-  children: ReactNode
-}) {
-  if (need !== undefined && allowance !== undefined && allowance < need) {
-    return (
-      <div className="space-y-2">
-        <TxButton
-          request={{ address: addresses.vladToken, abi: iVladTokenAbi, functionName: 'approve', args: [addresses.bank, need] }}
-          disabled={disabled}
-          errorMessages={BANK_ERRORS}
-          className="h-12 w-full"
-        >
-          Approve {formatToken(need)} VLAD
-        </TxButton>
-        <p className="text-xs text-muted">Step 1 of 2: let the bank pull this VLAD. Step 2 appears once it is confirmed.</p>
-      </div>
-    )
-  }
-  return <>{children}</>
 }

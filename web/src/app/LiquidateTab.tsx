@@ -3,6 +3,7 @@ import type { Address } from 'viem'
 import { useConnection, useReadContracts } from 'wagmi'
 import { stellarBankAbi } from '../abi'
 import { addresses } from '../config/addresses'
+import { ApproveThen } from '../shell/ApproveThen'
 import { explorerAddressUrl, formatToken, truncateAddress } from '../shell/format'
 import { ExternalIcon, StarGlyph } from '../shell/icons'
 import { NetworkGate } from '../shell/NetworkGate'
@@ -19,11 +20,11 @@ import {
   hfTone,
   seizeFor,
   useBankGlobals,
-  useBankUser,
+  useDebtApproval,
+  useMessageAtClick,
   valueOf,
   withBuffer,
 } from './bank'
-import { ApproveThen } from './ui'
 
 const MAX_ROWS = 50
 
@@ -170,6 +171,7 @@ export function LiquidateTab() {
                   isMe={!!me && me.toLowerCase() === row.borrower.toLowerCase()}
                   open={open === row.borrower}
                   onToggle={() => setOpen((o) => (o === row.borrower ? undefined : row.borrower))}
+                  onClose={() => setOpen(undefined)}
                 />
               ))}
             </ul>
@@ -180,7 +182,19 @@ export function LiquidateTab() {
   )
 }
 
-function BorrowerRow({ row, isMe, open, onToggle }: { row: Row; isMe: boolean; open: boolean; onToggle: () => void }) {
+function BorrowerRow({
+  row,
+  isMe,
+  open,
+  onToggle,
+  onClose,
+}: {
+  row: Row
+  isMe: boolean
+  open: boolean
+  onToggle: () => void
+  onClose: () => void
+}) {
   const canLiquidate = row.hf !== undefined && row.hf < WAD && (row.debt ?? 0n) > 0n
   const tone = hfTone(row.hf)
   return (
@@ -206,17 +220,27 @@ function BorrowerRow({ row, isMe, open, onToggle }: { row: Row; isMe: boolean; o
           <button
             type="button"
             className={`btn h-10 min-h-10 w-full px-4 text-sm md:w-auto ${canLiquidate ? 'btn-primary' : 'btn-ghost'}`}
-            disabled={!canLiquidate}
-            aria-expanded={canLiquidate ? open : undefined}
+            disabled={!canLiquidate && !open}
+            aria-expanded={canLiquidate || open ? open : undefined}
             title={canLiquidate ? undefined : 'Only positions with a health factor below 1 can be liquidated'}
             onClick={onToggle}
           >
-            {canLiquidate ? (open ? 'Close' : 'Liquidate') : 'Healthy'}
+            {open ? 'Close' : canLiquidate ? 'Liquidate' : 'Healthy'}
           </button>
         </div>
       </div>
-      {open && canLiquidate && row.debt !== undefined && row.collateral !== undefined ? (
-        <LiquidatePanel borrower={row.borrower} debt={row.debt} collateral={row.collateral} />
+      {/*
+        Stays mounted while open, even when a refetch already shows the position liquidated (debt 0): the pending
+        TxButton inside must see its receipt to toast and refresh. A confirmed liquidation closes it.
+      */}
+      {open && row.debt !== undefined && row.collateral !== undefined ? (
+        <LiquidatePanel
+          borrower={row.borrower}
+          debt={row.debt}
+          collateral={row.collateral}
+          canLiquidate={canLiquidate}
+          onLiquidated={onClose}
+        />
       ) : null}
     </li>
   )
@@ -231,14 +255,31 @@ function Cell({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function LiquidatePanel({ borrower, debt, collateral }: { borrower: Address; debt: bigint; collateral: bigint }) {
+function LiquidatePanel({
+  borrower,
+  debt,
+  collateral,
+  canLiquidate,
+  onLiquidated,
+}: {
+  borrower: Address
+  debt: bigint
+  collateral: bigint
+  canLiquidate: boolean
+  onLiquidated: () => void
+}) {
   const g = useBankGlobals()
-  const { allowance } = useBankUser()
   const { balance } = useVladBalance()
   const price = g.price
   const seize = price ? seizeFor(debt, collateral, price) : undefined
-  const need = withBuffer(debt, g.borrowRate)
-  const short = balance !== undefined && balance < need
+  // Frozen debt + 1 h of interest, so the debt growing on every refetch does not bring the Approve step back.
+  const need = useDebtApproval(debt, g.borrowRate) ?? 0n
+  // The wallet must hold the debt (plus 600 s of interest), not the whole approval buffer.
+  const short = canLiquidate && balance !== undefined && balance < withBuffer(debt, g.borrowRate)
+  const liquidateMessage = useMessageAtClick(
+    () =>
+      `Liquidated ${truncateAddress(borrower)}: repaid ≈ ${formatToken(debt, 18, 4)} VLAD, received ≈ ${formatToken(seize, 18, 6)} ETH.`,
+  )
 
   return (
     <div className="border-t border-border/70 bg-bg/40 px-4 py-4">
@@ -255,16 +296,26 @@ function LiquidatePanel({ borrower, debt, collateral }: { borrower: Address; deb
       <div className="mt-4 max-w-sm">
         <NetworkGate connectMessage="Connect MetaMask to liquidate this position.">
           {short ? <p className="mb-3 text-sm text-danger">Your wallet holds less VLAD than this debt.</p> : null}
-          <ApproveThen need={need} allowance={allowance} disabled={!DEPLOYED || short}>
-            <TxButton
-              request={{ address: addresses.bank, abi: stellarBankAbi, functionName: 'liquidate', args: [borrower] }}
-              disabled={!DEPLOYED || short}
-              errorMessages={BANK_ERRORS}
-              className="h-12 w-full"
+          <div className="contents" onClickCapture={liquidateMessage.capture}>
+            <ApproveThen
+              spender={addresses.bank}
+              spenderName="the bank"
+              amount={need}
+              disabled={!DEPLOYED || short || !canLiquidate}
+              stepLabels={['Approve VLAD', 'Liquidate']}
             >
-              Liquidate {truncateAddress(borrower)}
-            </TxButton>
-          </ApproveThen>
+              <TxButton
+                request={{ address: addresses.bank, abi: stellarBankAbi, functionName: 'liquidate', args: [borrower] }}
+                disabled={!DEPLOYED || short || !canLiquidate}
+                errorMessages={BANK_ERRORS}
+                onConfirmed={onLiquidated}
+                successMessage={liquidateMessage.message}
+                className="h-12 w-full"
+              >
+                Liquidate {truncateAddress(borrower)}
+              </TxButton>
+            </ApproveThen>
+          </div>
         </NetworkGate>
       </div>
     </div>

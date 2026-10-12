@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { stellarBankAbi } from '../abi'
 import { addresses } from '../config/addresses'
+import { ApproveThen } from '../shell/ApproveThen'
 import { formatTimestamp, formatToken } from '../shell/format'
 import { NetworkGate } from '../shell/NetworkGate'
 import { TxButton } from '../shell/TxButton'
@@ -18,9 +19,10 @@ import {
   toInput,
   useBankGlobals,
   useBankUser,
+  useMessageAtClick,
   useNowMs,
 } from './bank'
-import { AmountInput, ApproveThen, LiveAmount, Line, Segmented } from './ui'
+import { AmountInput, LiveAmount, Line, Segmented } from './ui'
 
 export function SaveTab() {
   const { savingsRate } = useBankGlobals()
@@ -47,7 +49,7 @@ export function SaveTab() {
 
 function SavingsBody() {
   const { savingsRate, liquidity } = useBankGlobals()
-  const { savingsPrincipal, savingsSince, allowance } = useBankUser()
+  const { savingsPrincipal, savingsSince } = useBankUser()
   const nowMs = useNowMs(1_000)
   const live = savingsPrincipal !== undefined && savingsSince !== undefined
   const balance = live ? accrue(savingsPrincipal, savingsRate, savingsSince, nowMs) : undefined
@@ -86,20 +88,12 @@ function SavingsBody() {
         </p>
       </div>
 
-      <SavingsActions balance={balance} liquidity={liquidity} allowance={allowance} />
+      <SavingsActions balance={balance} liquidity={liquidity} />
     </div>
   )
 }
 
-function SavingsActions({
-  balance,
-  liquidity,
-  allowance,
-}: {
-  balance: bigint | undefined
-  liquidity: bigint | undefined
-  allowance: bigint | undefined
-}) {
+function SavingsActions({ balance, liquidity }: { balance: bigint | undefined; liquidity: bigint | undefined }) {
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
   const [input, setInput] = useState('')
   const [max, setMax] = useState(false)
@@ -117,6 +111,12 @@ function SavingsActions({
   const withdrawAmount = max ? balance : amount
   const lowLiquidity =
     mode === 'withdraw' && withdrawAmount !== undefined && liquidity !== undefined && withdrawAmount > liquidity
+  // MAX withdraws principal + interest up to the block it lands in: `balance` is the live estimate at the click.
+  const withdrawMessage = useMessageAtClick(() =>
+    max
+      ? `Withdrew ≈ ${formatToken(balance, 18, 4)} VLAD (all savings + interest).`
+      : `Withdrew ${formatToken(amount, 18, 4)} VLAD from savings.`,
+  )
 
   return (
     <div className="min-w-0 space-y-5 rounded-2xl border border-border/80 bg-bg/40 p-4 sm:p-5">
@@ -142,13 +142,20 @@ function SavingsActions({
             onMax={wallet ? () => setInput(toInput(wallet, 18)) : undefined}
           />
           {tooMuchDeposit ? <p className="text-sm text-danger">Not enough VLAD in your wallet.</p> : null}
-          <ApproveThen need={amount} allowance={allowance} disabled={!DEPLOYED || tooMuchDeposit}>
+          <ApproveThen
+            spender={addresses.bank}
+            spenderName="the bank"
+            amount={amount ?? 0n}
+            disabled={!DEPLOYED || tooMuchDeposit}
+            stepLabels={['Approve VLAD', 'Deposit VLAD']}
+          >
             <TxButton
               request={{ address: addresses.bank, abi: stellarBankAbi, functionName: 'depositSavings', args: [amount ?? 0n] }}
               disabled={!DEPLOYED || amount === undefined || tooMuchDeposit}
               errorMessages={BANK_ERRORS}
               className="h-12 w-full"
               onConfirmed={() => setInput('')}
+              successMessage={`Deposited ${formatToken(amount, 18, 4)} VLAD into savings.`}
             >
               {amount ? `Deposit ${formatToken(amount)} VLAD` : 'Deposit VLAD'}
             </TxButton>
@@ -185,23 +192,26 @@ function SavingsActions({
               The bank holds {formatToken(liquidity)} VLAD of free liquidity right now; the rest is lent out to borrowers.
             </p>
           ) : null}
-          <TxButton
-            request={{
-              address: addresses.bank,
-              abi: stellarBankAbi,
-              functionName: 'withdrawSavings',
-              args: [max ? MAX_UINT : (amount ?? 0n)],
-            }}
-            disabled={!DEPLOYED || (!max && amount === undefined) || tooMuchWithdraw}
-            errorMessages={BANK_ERRORS}
-            className="h-12 w-full"
-            onConfirmed={() => {
-              setInput('')
-              setMax(false)
-            }}
-          >
-            {max ? 'Withdraw everything' : amount ? `Withdraw ${formatToken(amount)} VLAD` : 'Withdraw VLAD'}
-          </TxButton>
+          <div className="contents" onClickCapture={withdrawMessage.capture}>
+            <TxButton
+              request={{
+                address: addresses.bank,
+                abi: stellarBankAbi,
+                functionName: 'withdrawSavings',
+                args: [max ? MAX_UINT : (amount ?? 0n)],
+              }}
+              disabled={!DEPLOYED || (!max && amount === undefined) || tooMuchWithdraw}
+              errorMessages={BANK_ERRORS}
+              className="h-12 w-full"
+              onConfirmed={() => {
+                setInput('')
+                setMax(false)
+              }}
+              successMessage={withdrawMessage.message}
+            >
+              {max ? 'Withdraw everything' : amount ? `Withdraw ${formatToken(amount)} VLAD` : 'Withdraw VLAD'}
+            </TxButton>
+          </div>
         </>
       )}
     </div>

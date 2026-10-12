@@ -3,6 +3,7 @@ import { parseEther } from 'viem'
 import { useBalance } from 'wagmi'
 import { stellarBankAbi } from '../abi'
 import { CHAIN_ID, addresses } from '../config/addresses'
+import { ApproveThen } from '../shell/ApproveThen'
 import { formatToken } from '../shell/format'
 import { NetworkGate } from '../shell/NetworkGate'
 import { TxButton } from '../shell/TxButton'
@@ -27,10 +28,12 @@ import {
   toInput,
   useBankGlobals,
   useBankUser,
+  useDebtApproval,
+  useMessageAtClick,
   useNowMs,
   valueOf,
 } from './bank'
-import { AmountInput, ApproveThen, HealthGauge, LiveAmount, Line, Meter, Segmented } from './ui'
+import { AmountInput, HealthGauge, LiveAmount, Line, Meter, Segmented } from './ui'
 
 type Action = 'deposit' | 'withdraw' | 'borrow' | 'repay'
 const GAS_RESERVE = parseEther('0.005')
@@ -150,7 +153,7 @@ function CreditActions({
   debtSince: bigint | undefined
 }) {
   const g = useBankGlobals()
-  const { allowance, address } = useBankUser()
+  const { address } = useBankUser()
   const { balance: vlad } = useVladBalance()
   const eth = useBalance({ address, chainId: CHAIN_ID, query: { enabled: !!address } }).data?.value
   const [action, setAction] = useState<Action>('deposit')
@@ -160,7 +163,7 @@ function CreditActions({
   const price = g.price
   const nowMs = useNowMs(1_000)
 
-  // Debt projected SAFETY_SECONDS ahead, so "Max" and approvals still hold when the transaction is mined.
+  // Debt projected SAFETY_SECONDS ahead, so the limits below still hold when the transaction is mined.
   const debtAhead =
     debtPrincipal !== undefined && debtSince !== undefined
       ? accrue(debtPrincipal, g.borrowRate, debtSince, nowMs + SAFETY_SECONDS * 1000)
@@ -210,7 +213,10 @@ function CreditActions({
   }
   if (action === 'repay' && max && vlad !== undefined && debtAhead > vlad) problem = 'Your wallet holds less VLAD than the full debt.'
 
-  const repayNeed = max ? debtAhead : amount !== undefined && amount > debtAhead ? debtAhead : amount
+  // Allowance for repay: the frozen debt + 1 h of interest (see useDebtApproval), or the typed amount when smaller.
+  const debtApproval = useDebtApproval(debt, g.borrowRate)
+  const repayNeed =
+    max ? debtApproval : amount !== undefined && debtApproval !== undefined && amount > debtApproval ? debtApproval : amount
   const ready = DEPLOYED && !problem && (amount !== undefined || max)
 
   const request =
@@ -233,10 +239,33 @@ function CreditActions({
             ? 'Repay full debt'
             : `Repay ${amount ? formatToken(amount) : ''} VLAD`
 
+  // repay() takes min(amount, debt), so a typed amount at or above the live debt clears it.
+  const repaysAll = action === 'repay' && (max || (amount !== undefined && amount >= debt))
+  const successMessage = useMessageAtClick(() =>
+    action === 'deposit'
+      ? `Locked ${formatToken(amount, 18, 6)} ETH as collateral.`
+      : action === 'withdraw'
+        ? `Withdrew ${formatToken(amount, 18, 6)} ETH of collateral.`
+        : action === 'borrow'
+          ? `Borrowed ${formatToken(amount, 18, 4)} VLAD.`
+          : repaysAll
+            ? `Repaid ≈ ${formatToken(debt, 18, 4)} VLAD: your whole debt.`
+            : `Repaid ${formatToken(amount, 18, 4)} VLAD; ≈ ${formatToken(debt - (amount ?? 0n), 18, 4)} VLAD of debt left.`,
+  )
+
   const button = (
-    <TxButton request={request} disabled={!ready} errorMessages={BANK_ERRORS} className="h-12 w-full" onConfirmed={reset}>
-      {label.replace(/\s+/g, ' ')}
-    </TxButton>
+    <div className="contents" onClickCapture={successMessage.capture}>
+      <TxButton
+        request={request}
+        disabled={!ready}
+        errorMessages={BANK_ERRORS}
+        className="h-12 w-full"
+        onConfirmed={reset}
+        successMessage={successMessage.message}
+      >
+        {label.replace(/\s+/g, ' ')}
+      </TxButton>
+    </div>
   )
 
   return (
@@ -324,7 +353,13 @@ function CreditActions({
       {problem ? <p className="text-sm text-danger">{problem}</p> : null}
 
       {action === 'repay' ? (
-        <ApproveThen need={repayNeed} allowance={allowance} disabled={!ready}>
+        <ApproveThen
+          spender={addresses.bank}
+          spenderName="the bank"
+          amount={repayNeed ?? 0n}
+          disabled={!ready}
+          stepLabels={['Approve VLAD', 'Repay VLAD']}
+        >
           {button}
         </ApproveThen>
       ) : (

@@ -46,6 +46,22 @@ export const CheckIcon = ({ size = 16, ...p }: IconProps) => (
   </svg>
 )
 
+/** Circle with an exclamation mark: errors and reverted transactions. */
+export const AlertIcon = ({ size = 16, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5v5.5M12 16.5h.01" />
+  </svg>
+)
+
+/** Circle with an "i": neutral information. */
+export const InfoIcon = ({ size = 16, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5.5M12 7.5h.01" />
+  </svg>
+)
+
 export const ExternalIcon = ({ size = 14, ...p }: IconProps) => (
   <svg {...base(size)} {...p}>
     <path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />

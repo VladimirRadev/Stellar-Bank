@@ -1,8 +1,8 @@
-import { Fragment, isValidElement, useEffect, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { erc20Abi, type Abi, type Address } from 'viem'
 import { useConnection, useReadContract } from 'wagmi'
 import { CHAIN_ID, addresses } from '../config/addresses'
-import { formatToken, isConfiguredAddress } from './format'
+import { formatToken, isConfiguredAddress, textOf } from './format'
 import { CheckIcon } from './icons'
 import { TxButton } from './TxButton'
 
@@ -21,6 +21,12 @@ export type ApproveThenProps = {
   spenderName: string
   /** Allowance the action needs, in base units (18 decimals). 0n: nothing to approve, children render directly. */
   amount: bigint
+  /**
+   * Allowance the approve step grants, in base units. Must be >= `amount` (a smaller value is raised
+   * to `amount`). Default `amount`. Pass a multiple to cover several actions with one approval, for
+   * example the entry fee x 10. Step 2 still opens as soon as the allowance covers `amount`.
+   */
+  approveAmount?: bigint
   /** Labels of the two steps. Default: ['Approve {tokenSymbol}', text of `children`]. */
   stepLabels?: [string, string]
   /** Disables the approve button (the action button in `children` handles its own disabled state). */
@@ -33,16 +39,18 @@ export type ApproveThenProps = {
  * After a confirmed approve, step 2 shows at once, even if the RPC still serves the old allowance.
  * This "optimistic" approval ends as soon as the allowance read catches up (from then on the read
  * decides, so a later spend that uses up the allowance brings step 1 back), or after this many ms
- * as a safety net. TxButton's last post-receipt refresh runs at most ~28 s after the receipt.
+ * as a safety net. The tracker's last post-receipt refresh runs at most ~28 s after the receipt.
  */
 const OPTIMISTIC_MAX_MS = 30_000
 
+/** `amount` is the allowance that was approved (`approveAmount`). */
 type Optimistic = { key: string; amount: bigint; until: number }
 
 /**
  * Shared approve-then-act flow. Reads allowance(owner, spender) on Sepolia and shows a two-step
- * track. Step 1 is an approve TxButton for exactly `amount`; once it is confirmed (or the allowance
- * already covers `amount`) the track checks step 1 and `children` (step 2) render instead.
+ * track. Step 1 is an approve TxButton for `approveAmount` (default: exactly `amount`); once it is
+ * confirmed (or the allowance already covers `amount`) the track checks step 1 and `children` (step 2)
+ * render instead.
  * While the first allowance read loads, a skeleton holds the place, so the wrong step never flashes.
  * Renders `children` directly when no wallet is connected, when `amount` is 0n, or when the token or
  * spender address is a not-deployed placeholder.
@@ -54,6 +62,7 @@ export function ApproveThen({
   spender,
   spenderName,
   amount,
+  approveAmount,
   stepLabels,
   disabled,
   children,
@@ -88,7 +97,11 @@ export function ApproveThen({
   if (!active) return <>{children}</>
 
   const approved = optimisticCovers || (allowance !== undefined && allowance >= amount)
+  const toApprove = approveAmount !== undefined && approveAmount > amount ? approveAmount : amount
   const amountLabel = `${formatToken(amount)} ${tokenSymbol}`
+  const approveLabel = `${formatToken(toApprove)} ${tokenSymbol}`
+  /** How many more actions of `amount` the approval covers after this one. */
+  const extraRuns = toApprove / amount - 1n
   const [firstLabel, secondLabel] = stepLabels ?? [`Approve ${tokenSymbol}`, textOf(children).trim() || 'Confirm']
 
   if (read.isLoading && !approved) {
@@ -109,16 +122,21 @@ export function ApproveThen({
       ) : (
         <Fragment key="approve">
           <TxButton
-            request={{ address: token, abi: tokenAbi, functionName: 'approve', args: [spender, amount] }}
+            request={{ address: token, abi: tokenAbi, functionName: 'approve', args: [spender, toApprove] }}
             disabled={disabled}
             className="w-full"
-            onConfirmed={() => setOptimistic({ key, amount, until: Date.now() + OPTIMISTIC_MAX_MS })}
-            successMessage={`Approved ${amountLabel} for ${spenderName}. Step 2 is ready.`}
+            onConfirmed={() => setOptimistic({ key, amount: toApprove, until: Date.now() + OPTIMISTIC_MAX_MS })}
+            successMessage={`Approved ${approveLabel} for ${spenderName}. Step 2 is ready.`}
           >
-            Approve {amountLabel}
+            Approve {approveLabel}
           </TxButton>
           <p className="text-xs leading-relaxed text-muted">
-            Step 1 of 2 lets {spenderName} spend exactly {amountLabel} from your wallet. Step 2 opens as soon as it is mined.
+            {toApprove === amount
+              ? `Step 1 of 2 lets ${spenderName} spend exactly ${amountLabel} from your wallet.`
+              : `Step 1 of 2 lets ${spenderName} spend up to ${approveLabel} from your wallet. This action uses ${amountLabel}${
+                  extraRuns > 0n ? `, so the approval also covers the next ${extraRuns.toString()}` : ''
+                }.`}{' '}
+            Step 2 opens as soon as it is mined.
           </p>
         </Fragment>
       )}
@@ -152,12 +170,4 @@ function StepTrack({ approved, labels }: { approved: boolean; labels: [string, s
       </li>
     </ol>
   )
-}
-
-/** Plain text of a React node (strings, numbers, arrays and element children), for the default step-2 label. */
-function textOf(node: ReactNode): string {
-  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'bigint') return String(node)
-  if (Array.isArray(node)) return node.map(textOf).join('')
-  if (isValidElement<{ children?: ReactNode }>(node)) return textOf(node.props.children)
-  return ''
 }

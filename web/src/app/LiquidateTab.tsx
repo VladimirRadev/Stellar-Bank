@@ -21,7 +21,6 @@ import {
   seizeFor,
   useBankGlobals,
   useDebtApproval,
-  useMessageAtClick,
   valueOf,
   withBuffer,
 } from './bank'
@@ -276,10 +275,8 @@ function LiquidatePanel({
   const need = useDebtApproval(debt, g.borrowRate) ?? 0n
   // The wallet must hold the debt (plus 600 s of interest), not the whole approval buffer.
   const short = canLiquidate && balance !== undefined && balance < withBuffer(debt, g.borrowRate)
-  const liquidateMessage = useMessageAtClick(
-    () =>
-      `Liquidated ${truncateAddress(borrower)}: repaid ≈ ${formatToken(debt, 18, 4)} VLAD, received ≈ ${formatToken(seize, 18, 6)} ETH.`,
-  )
+  const liquidateMessage = () =>
+    `Liquidated ${truncateAddress(borrower)}: repaid ≈ ${formatToken(debt, 18, 4)} VLAD, received ≈ ${formatToken(seize, 18, 6)} ETH.`
 
   return (
     <div className="border-t border-border/70 bg-bg/40 px-4 py-4">
@@ -296,26 +293,24 @@ function LiquidatePanel({
       <div className="mt-4 max-w-sm">
         <NetworkGate connectMessage="Connect MetaMask to liquidate this position.">
           {short ? <p className="mb-3 text-sm text-danger">Your wallet holds less VLAD than this debt.</p> : null}
-          <div className="contents" onClickCapture={liquidateMessage.capture}>
-            <ApproveThen
-              spender={addresses.bank}
-              spenderName="the bank"
-              amount={need}
+          <ApproveThen
+            spender={addresses.bank}
+            spenderName="the bank"
+            amount={need}
+            disabled={!DEPLOYED || short || !canLiquidate}
+            stepLabels={['Approve VLAD', 'Liquidate']}
+          >
+            <TxButton
+              request={{ address: addresses.bank, abi: stellarBankAbi, functionName: 'liquidate', args: [borrower] }}
               disabled={!DEPLOYED || short || !canLiquidate}
-              stepLabels={['Approve VLAD', 'Liquidate']}
+              errorMessages={BANK_ERRORS}
+              onConfirmed={onLiquidated}
+              successMessage={liquidateMessage}
+              className="h-12 w-full"
             >
-              <TxButton
-                request={{ address: addresses.bank, abi: stellarBankAbi, functionName: 'liquidate', args: [borrower] }}
-                disabled={!DEPLOYED || short || !canLiquidate}
-                errorMessages={BANK_ERRORS}
-                onConfirmed={onLiquidated}
-                successMessage={liquidateMessage.message}
-                className="h-12 w-full"
-              >
-                Liquidate {truncateAddress(borrower)}
-              </TxButton>
-            </ApproveThen>
-          </div>
+              Liquidate {truncateAddress(borrower)}
+            </TxButton>
+          </ApproveThen>
         </NetworkGate>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { isValidElement, type ReactNode } from 'react'
 import { formatUnits, zeroAddress, type Address, type Hash } from 'viem'
 import { EXPLORER_URL } from './wagmi'
 
@@ -69,3 +70,11 @@ export function formatTimestamp(seconds: number | bigint): string {
 
 export const explorerAddressUrl = (address: string) => `${EXPLORER_URL}/address/${address}`
 export const explorerTxUrl = (hash: Hash | string) => `${EXPLORER_URL}/tx/${hash}`
+
+/** Plain text of a React node (strings, numbers, arrays and element children), for labels built from JSX children. */
+export function textOf(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'bigint') return String(node)
+  if (Array.isArray(node)) return node.map(textOf).join('')
+  if (isValidElement<{ children?: ReactNode }>(node)) return textOf(node.props.children)
+  return ''
+}

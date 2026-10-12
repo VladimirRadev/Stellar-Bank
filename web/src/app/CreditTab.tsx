@@ -29,7 +29,6 @@ import {
   useBankGlobals,
   useBankUser,
   useDebtApproval,
-  useMessageAtClick,
   useNowMs,
   valueOf,
 } from './bank'
@@ -241,7 +240,7 @@ function CreditActions({
 
   // repay() takes min(amount, debt), so a typed amount at or above the live debt clears it.
   const repaysAll = action === 'repay' && (max || (amount !== undefined && amount >= debt))
-  const successMessage = useMessageAtClick(() =>
+  const successMessage = () =>
     action === 'deposit'
       ? `Locked ${formatToken(amount, 18, 6)} ETH as collateral.`
       : action === 'withdraw'
@@ -250,22 +249,19 @@ function CreditActions({
           ? `Borrowed ${formatToken(amount, 18, 4)} VLAD.`
           : repaysAll
             ? `Repaid ≈ ${formatToken(debt, 18, 4)} VLAD: your whole debt.`
-            : `Repaid ${formatToken(amount, 18, 4)} VLAD; ≈ ${formatToken(debt - (amount ?? 0n), 18, 4)} VLAD of debt left.`,
-  )
+            : `Repaid ${formatToken(amount, 18, 4)} VLAD; ≈ ${formatToken(debt - (amount ?? 0n), 18, 4)} VLAD of debt left.`
 
   const button = (
-    <div className="contents" onClickCapture={successMessage.capture}>
-      <TxButton
-        request={request}
-        disabled={!ready}
-        errorMessages={BANK_ERRORS}
-        className="h-12 w-full"
-        onConfirmed={reset}
-        successMessage={successMessage.message}
-      >
-        {label.replace(/\s+/g, ' ')}
-      </TxButton>
-    </div>
+    <TxButton
+      request={request}
+      disabled={!ready}
+      errorMessages={BANK_ERRORS}
+      className="h-12 w-full"
+      onConfirmed={reset}
+      successMessage={successMessage}
+    >
+      {label.replace(/\s+/g, ' ')}
+    </TxButton>
   )
 
   return (

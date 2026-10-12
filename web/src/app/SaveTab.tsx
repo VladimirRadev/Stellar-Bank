@@ -19,7 +19,6 @@ import {
   toInput,
   useBankGlobals,
   useBankUser,
-  useMessageAtClick,
   useNowMs,
 } from './bank'
 import { AmountInput, LiveAmount, Line, Segmented } from './ui'
@@ -112,11 +111,10 @@ function SavingsActions({ balance, liquidity }: { balance: bigint | undefined; l
   const lowLiquidity =
     mode === 'withdraw' && withdrawAmount !== undefined && liquidity !== undefined && withdrawAmount > liquidity
   // MAX withdraws principal + interest up to the block it lands in: `balance` is the live estimate at the click.
-  const withdrawMessage = useMessageAtClick(() =>
+  const withdrawMessage = () =>
     max
       ? `Withdrew ≈ ${formatToken(balance, 18, 4)} VLAD (all savings + interest).`
-      : `Withdrew ${formatToken(amount, 18, 4)} VLAD from savings.`,
-  )
+      : `Withdrew ${formatToken(amount, 18, 4)} VLAD from savings.`
 
   return (
     <div className="min-w-0 space-y-5 rounded-2xl border border-border/80 bg-bg/40 p-4 sm:p-5">
@@ -192,26 +190,24 @@ function SavingsActions({ balance, liquidity }: { balance: bigint | undefined; l
               The bank holds {formatToken(liquidity)} VLAD of free liquidity right now; the rest is lent out to borrowers.
             </p>
           ) : null}
-          <div className="contents" onClickCapture={withdrawMessage.capture}>
-            <TxButton
-              request={{
-                address: addresses.bank,
-                abi: stellarBankAbi,
-                functionName: 'withdrawSavings',
-                args: [max ? MAX_UINT : (amount ?? 0n)],
-              }}
-              disabled={!DEPLOYED || (!max && amount === undefined) || tooMuchWithdraw}
-              errorMessages={BANK_ERRORS}
-              className="h-12 w-full"
-              onConfirmed={() => {
-                setInput('')
-                setMax(false)
-              }}
-              successMessage={withdrawMessage.message}
-            >
-              {max ? 'Withdraw everything' : amount ? `Withdraw ${formatToken(amount)} VLAD` : 'Withdraw VLAD'}
-            </TxButton>
-          </div>
+          <TxButton
+            request={{
+              address: addresses.bank,
+              abi: stellarBankAbi,
+              functionName: 'withdrawSavings',
+              args: [max ? MAX_UINT : (amount ?? 0n)],
+            }}
+            disabled={!DEPLOYED || (!max && amount === undefined) || tooMuchWithdraw}
+            errorMessages={BANK_ERRORS}
+            className="h-12 w-full"
+            onConfirmed={() => {
+              setInput('')
+              setMax(false)
+            }}
+            successMessage={withdrawMessage}
+          >
+            {max ? 'Withdraw everything' : amount ? `Withdraw ${formatToken(amount)} VLAD` : 'Withdraw VLAD'}
+          </TxButton>
         </>
       )}
     </div>

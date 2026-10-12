@@ -1,5 +1,5 @@
 // Contract handles, bank math (mirrors src/StellarBank.sol), readable errors and shared read hooks.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { formatUnits, parseUnits } from 'viem'
 import { useConnection, useReadContracts } from 'wagmi'
 import { stellarBankAbi } from '../abi'
@@ -206,25 +206,5 @@ export function useBankUser() {
     debtPrincipal: loan?.[1],
     debtSince: loan?.[2],
     loading: DEPLOYED && !!address && q.isLoading,
-  }
-}
-
-/**
- * Success-toast text frozen at the moment of the click.
- *
- * TxButton builds its "Transaction confirmed" toast when the receipt arrives, from the props it has then.
- * The reads here refetch every 15 s and wagmi polls for the receipt every 8 s, so a refetch can land first and
- * already show the state after the transaction (debt back to 0, savings emptied). To report what was sent:
- * 1. wrap the TxButton in `<div className="contents" onClickCapture={capture}>`: `contents` keeps the
- *    wrapper out of the layout, and the capture phase runs `build()` before TxButton's own onClick;
- * 2. pass `message` as `successMessage`: TxButton calls it at receipt time and gets the text from the click.
- */
-export function useMessageAtClick(build: () => string) {
-  const atClick = useRef('')
-  return {
-    capture: () => {
-      atClick.current = build()
-    },
-    message: () => atClick.current,
   }
 }

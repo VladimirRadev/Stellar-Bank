@@ -110,7 +110,7 @@ Worked example (the same numbers as `test_LiquidateSeizesWithBonusAndLeavesRemai
 
 The frontend in `web/` is React 19 + Vite 8 + wagmi 3 + viem 2 + Tailwind CSS 4, built from the shared Stellar
 scaffold (`web/SCAFFOLD.md`). `web/src/shell/` (navigation, wallet button, transaction button, formatting) is
-identical in all six Stellar apps; the bank page itself is in `web/src/app/`. MetaMask (injected wallet) only,
+identical in all seven Stellar apps; the bank page itself is in `web/src/app/`. MetaMask (injected wallet) only,
 public Sepolia RPCs, no backend.
 
 - **Header stats:** ETH price in VLAD (AMM spot with the same-block guard), free VLAD liquidity, savings APR,
@@ -215,6 +215,7 @@ End-to-end run on Ethereum Sepolia on 2026-10-09 from the deployer `0xEb0243ea72
 | Store | [Stellar-Store](https://github.com/VladimirRadev/Stellar-Store) | https://vladimirradev.github.io/Stellar-Store/ |
 | Arena + Arcade | [Stellar-Arena](https://github.com/VladimirRadev/Stellar-Arena) | https://vladimirradev.github.io/Stellar-Arena/ |
 | Stellargon (prediction market) | [Stellargon](https://github.com/VladimirRadev/Stellargon) | https://vladimirradev.github.io/Stellargon/ |
+| CV (Vladimir Radev) | [Stellar-CV](https://github.com/VladimirRadev/Stellar-CV) | https://vladimirradev.github.io/Stellar-CV/ |
 
 Stellar is a personal portfolio brand, unrelated to the Stellar (XLM) network.
 

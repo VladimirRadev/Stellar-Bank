@@ -3,12 +3,17 @@ import { useConnection, useSwitchChain } from 'wagmi'
 import { CHAIN_ID, footerContracts } from '../config/addresses'
 import { explorerAddressUrl, formatToken, isConfiguredAddress, truncateAddress } from './format'
 import { ArrowIcon, ExternalIcon, GithubIcon, StarGlyph } from './icons'
-import { CURRENT_SITE, GITHUB_PROFILE, SITES, currentSite, getSite } from './sites'
+import { CURRENT_SITE, GITHUB_PROFILE, SITES, type SiteKey, currentSite, getSite } from './sites'
 import { useVladBalance } from './useVladBalance'
 import { WalletButton } from './WalletButton'
 
-/** Page frame shared by all Stellar apps: top navigation, faucet hint, main content, footer. */
-export function Shell({ children }: { children: ReactNode }) {
+/**
+ * Page frame shared by all Stellar apps: top navigation, faucet hint, main content, footer.
+ * `site` is the SITES entry this page is: the nav marks it active, and the faucet hint and the
+ * footer's source link follow it. It defaults to CURRENT_SITE. Only the Faucet's second page,
+ * the CV at /Stellar-Faucet/cv/, passes another key (`site="cv"`).
+ */
+export function Shell({ children, site = CURRENT_SITE }: { children: ReactNode; site?: SiteKey }) {
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Sticky only from md up: on phones the three header rows would take too much height. */}
@@ -25,17 +30,17 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <SuiteNav />
+          <SuiteNav active={site} />
         </div>
 
         <MobileStatusRow />
       </header>
 
-      <FaucetHint />
+      <FaucetHint site={site} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">{children}</main>
 
-      <Footer />
+      <Footer site={site} />
     </div>
   )
 }
@@ -51,7 +56,7 @@ const NAV_FADE_PX = 24
  * On narrow screens the row is wider than the viewport, so on mount it scrolls the active tab
  * into view, and each edge that hides more tabs fades out to show that the row scrolls.
  */
-function SuiteNav() {
+function SuiteNav({ active: activeKey }: { active: SiteKey }) {
   const navRef = useRef<HTMLElement>(null)
   const activeRef = useRef<HTMLAnchorElement>(null)
   const [fade, setFade] = useState({ left: false, right: false })
@@ -114,7 +119,7 @@ function SuiteNav() {
       style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
     >
       {SITES.map((site) => {
-        const active = site.key === CURRENT_SITE
+        const active = site.key === activeKey
         return (
           <a
             key={site.key}
@@ -206,10 +211,10 @@ function NetworkBadge() {
 }
 
 /** Shown under the header when the connected wallet holds 0 VLAD. */
-function FaucetHint() {
+function FaucetHint({ site }: { site: SiteKey }) {
   const { balance } = useVladBalance()
   if (balance === undefined || balance > 0n) return null
-  const onFaucet = CURRENT_SITE === 'faucet'
+  const onFaucet = site === 'faucet'
   return (
     <div className="border-b border-accent/20 bg-accent/[0.07]">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm sm:px-6">
@@ -222,7 +227,7 @@ function FaucetHint() {
   )
 }
 
-function Footer() {
+function Footer({ site }: { site: SiteKey }) {
   return (
     <footer className="mt-12 border-t border-border/70 bg-bg/60">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.3fr_1fr_1fr]">
@@ -267,7 +272,7 @@ function Footer() {
           <p className="eyebrow">Links</p>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
-              <a className="link inline-flex items-center gap-1.5" href={currentSite.repo} target="_blank" rel="noreferrer">
+              <a className="link inline-flex items-center gap-1.5" href={getSite(site).repo} target="_blank" rel="noreferrer">
                 <GithubIcon /> Source on GitHub
               </a>
             </li>

@@ -215,7 +215,7 @@ End-to-end run on Ethereum Sepolia on 2026-10-09 from the deployer `0xEb0243ea72
 | Store | [Stellar-Store](https://github.com/VladimirRadev/Stellar-Store) | https://vladimirradev.github.io/Stellar-Store/ |
 | Arena + Arcade | [Stellar-Arena](https://github.com/VladimirRadev/Stellar-Arena) | https://vladimirradev.github.io/Stellar-Arena/ |
 | Stellargon (prediction market) | [Stellargon](https://github.com/VladimirRadev/Stellargon) | https://vladimirradev.github.io/Stellargon/ |
-| CV (Vladimir Radev) | [Stellar-CV](https://github.com/VladimirRadev/Stellar-CV) | https://vladimirradev.github.io/Stellar-CV/ |
+| CV (Vladimir Radev) | [Stellar-Faucet / web/src/cv/](https://github.com/VladimirRadev/Stellar-Faucet/tree/main/web/src/cv) | https://vladimirradev.github.io/Stellar-Faucet/cv/ |
 
 Stellar is a personal portfolio brand, unrelated to the Stellar (XLM) network.
 

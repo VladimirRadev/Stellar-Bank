@@ -1,5 +1,6 @@
 /**
- * The seven apps of the Stellar suite. This file is identical in all seven Stellar repos,
+ * The pages of the Stellar suite: six apps plus the CV, which the Stellar-Faucet repo serves as a
+ * second page at /Stellar-Faucet/cv/. This file is identical in all six Stellar repos,
  * except for CURRENT_SITE at the bottom, which names the app this repo builds.
  */
 export type SiteKey = 'faucet' | 'lp-staking' | 'bank' | 'store' | 'arena' | 'stellargon' | 'cv'
@@ -14,7 +15,7 @@ export type Site = {
   tagline: string
   /** Absolute GitHub Pages URL (always ends with a slash). */
   url: string
-  /** GitHub repository URL. */
+  /** GitHub URL of the source: the repository, or for the CV its folder in Stellar-Faucet. */
   repo: string
 }
 
@@ -75,8 +76,8 @@ export const SITES: readonly Site[] = [
     name: 'CV',
     navLabel: 'CV',
     tagline: 'Vladimir Radev — Blockchain Developer',
-    url: `${PAGES_ROOT}/Stellar-CV/`,
-    repo: `${GITHUB_PROFILE}/Stellar-CV`,
+    url: `${PAGES_ROOT}/Stellar-Faucet/cv/`,
+    repo: `${GITHUB_PROFILE}/Stellar-Faucet/tree/main/web/src/cv`,
   },
 ]
 
